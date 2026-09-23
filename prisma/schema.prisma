@@ -1,0 +1,114 @@
+// Ayriliq Vaqti — private group platform
+// Database schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Production: PostgreSQL. For local dev without Postgres installed,
+  // you can temporarily switch provider to "sqlite" and url to "file:./dev.db".
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  telegram     String?
+  bio          String?
+  birthday     DateTime?
+  avatarUrl    String?
+  role         Role     @default(MEMBER)
+  isBlocked    Boolean  @default(false)
+  isOnline     Boolean  @default(false)
+  lastSeenAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages         Message[]
+  reactions        MessageReaction[]
+  reads            MessageRead[]
+  createdCountdown Countdown[]
+  announcements    Announcement[]
+
+  @@index([username])
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  content     String
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replyToId   String?
+  replyTo     Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies     Message[] @relation("MessageReplies")
+  attachmentUrl  String?
+  attachmentType String? // "image" | "file" | "voice" | "video" | "sticker"
+  attachmentName String?
+  attachmentSize Int?
+  attachmentDuration Int? // seconds, for voice/video
+  isEdited    Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  isPinned    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  reactions MessageReaction[]
+  reads     MessageRead[]
+
+  @@index([createdAt])
+  @@index([isPinned])
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+}
+
+model Countdown {
+  id          String   @id @default(cuid())
+  title       String   @default("AYRILIQ VAQTI")
+  startAt     DateTime
+  targetAt    DateTime
+  isActive    Boolean  @default(true)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdById String
+  createdBy User     @relation(fields: [createdById], references: [id])
+  createdAt DateTime @default(now())
+}

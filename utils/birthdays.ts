@@ -1,4 +1,4 @@
-import type { Contact } from '@/hooks/useContacts';
+import type { Contact } from '@/lib/storage';
 
 export interface UpcomingBirthday {
   contact: Contact;

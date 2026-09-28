@@ -1,12 +1,7 @@
 node_modules/
 .next/
-.env
-.env.local
+out/
 *.log
-dev.db
 .DS_Store
 next-env.d.ts
-
-# uploaded chat attachments (local disk storage, not versioned)
-public/uploads/*
-!public/uploads/.gitkeep
+tsconfig.tsbuildinfo

@@ -1,21 +1,20 @@
 'use client';
 
-import { useCountdown } from '@/hooks/useCountdown';
+import { useEffect, useState } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { CountdownDigit } from './CountdownDigit';
+import { computeCountdown } from '@/utils/countdown';
+import type { CountdownData } from '@/lib/storage';
 
-export function CountdownCard() {
-  const { title, parts, loading, hasCountdown } = useCountdown();
+export function CountdownCard({ countdown }: { countdown: CountdownData | null }) {
+  const [now, setNow] = useState(() => new Date());
 
-  if (loading) {
-    return (
-      <GlassCard className="flex h-40 items-center justify-center">
-        <span className="text-sm text-ink-tertiary">Yuklanmoqda...</span>
-      </GlassCard>
-    );
-  }
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
-  if (!hasCountdown || !parts) {
+  if (!countdown) {
     return (
       <GlassCard className="flex h-40 items-center justify-center px-6 text-center">
         <span className="text-sm text-ink-tertiary">
@@ -25,6 +24,8 @@ export function CountdownCard() {
     );
   }
 
+  const parts = computeCountdown(new Date(countdown.startAt), new Date(countdown.targetAt), now);
+
   return (
     <GlassCard className="relative overflow-hidden px-4 py-8 sm:px-10 sm:py-10">
       <div
@@ -33,7 +34,7 @@ export function CountdownCard() {
       />
 
       <p className="relative mb-6 text-center text-xs font-medium uppercase tracking-[0.2em] text-ink-secondary sm:mb-8">
-        {title}
+        {countdown.title}
       </p>
 
       <div className="relative flex items-center justify-center divide-x divide-white/[0.06]">

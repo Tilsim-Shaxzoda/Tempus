@@ -2,22 +2,17 @@
 
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import { useContacts } from '@/hooks/useContacts';
+import type { Contact } from '@/lib/storage';
 import { ContactCard } from './ContactCard';
 
-export function ContactsList({ limit }: { limit?: number }) {
-  const { contacts, loading } = useContacts();
+export function ContactsList({ contacts }: { contacts: Contact[] }) {
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const base = !q
-      ? contacts
-      : contacts.filter(
-          (c) => c.fullName.toLowerCase().includes(q) || c.username.toLowerCase().includes(q)
-        );
-    return limit ? base.slice(0, limit) : base;
-  }, [contacts, query, limit]);
+    if (!q) return contacts;
+    return contacts.filter((c) => c.fullName.toLowerCase().includes(q));
+  }, [contacts, query]);
 
   return (
     <div>
@@ -31,9 +26,7 @@ export function ContactsList({ limit }: { limit?: number }) {
         />
       </div>
 
-      {loading ? (
-        <p className="py-6 text-center text-sm text-ink-tertiary">Yuklanmoqda...</p>
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <p className="py-6 text-center text-sm text-ink-tertiary">Hech kim topilmadi.</p>
       ) : (
         <div className="space-y-2">

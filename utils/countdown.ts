@@ -9,9 +9,6 @@ export interface CountdownParts {
 
 /**
  * Pure function: given a start, a target, and "now", compute the countdown parts.
- * "now" must come from a trustworthy clock (the server's Date.now(), passed to the
- * client as an offset) — never the raw client Date, since the spec requires the
- * countdown not to trust the user's device clock.
  */
 export function computeCountdown(startAt: Date, targetAt: Date, now: Date): CountdownParts {
   const totalMs = Math.max(targetAt.getTime() - startAt.getTime(), 1);

@@ -1,10 +1,14 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { loadData, saveData, type AppData, type Contact, type CountdownData } from '@/lib/storage';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '@/lib/firebase';
+import { ADMIN_CODE, defaultData, type AppData, type Contact, type CountdownData } from '@/lib/storage';
 
 interface AppDataContextValue {
   loading: boolean;
+  configured: boolean;
+  error: string | null;
   countdown: CountdownData | null;
   contacts: Contact[];
   setCountdown: (countdown: CountdownData | null) => void;
@@ -16,21 +20,51 @@ interface AppDataContextValue {
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AppData>({ countdown: null, contacts: [] });
+  const [data, setData] = useState<AppData>(defaultData);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setData(loadData());
-    setLoading(false);
+    if (!isFirebaseConfigured || !db) {
+      setLoading(false);
+      return;
+    }
+
+    const ref = doc(db, 'app', 'main');
+    const unsubscribe = onSnapshot(
+      ref,
+      (snapshot) => {
+        const raw = snapshot.data();
+        setData({
+          countdown: (raw?.countdown as CountdownData | undefined) ?? null,
+          contacts: Array.isArray(raw?.contacts) ? (raw!.contacts as Contact[]) : []
+        });
+        setError(null);
+        setLoading(false);
+      },
+      () => {
+        setError("Ma'lumotni yuklab bo'lmadi. Firebase/Firestore sozlamalarini tekshiring.");
+        setLoading(false);
+      }
+    );
+
+    return unsubscribe;
   }, []);
 
-  function persist(next: AppData) {
+  async function persist(next: AppData) {
     setData(next);
-    saveData(next);
+    if (!isFirebaseConfigured || !db) return;
+    try {
+      await setDoc(doc(db, 'app', 'main'), { ...next, adminCode: ADMIN_CODE });
+    } catch {
+      setError("Saqlab bo'lmadi. Internet aloqasi yoki Firestore qoidalarini tekshiring.");
+    }
   }
 
   const value: AppDataContextValue = {
     loading,
+    configured: isFirebaseConfigured,
+    error,
     countdown: data.countdown,
     contacts: data.contacts,
     setCountdown: (countdown) => persist({ ...data, countdown }),

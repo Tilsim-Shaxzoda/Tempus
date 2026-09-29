@@ -7,12 +7,35 @@ import { BirthdaysList } from '@/components/dashboard/BirthdaysList';
 import { AdminPanel } from '@/components/admin/AdminPanel';
 
 export default function HomePage() {
-  const { loading, countdown, contacts } = useAppData();
+  const { loading, configured, error, countdown, contacts } = useAppData();
+
+  if (!configured) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 text-center">
+        <div className="max-w-sm space-y-2">
+          <p className="text-sm font-medium text-ink-primary">Firebase hali sozlanmagan</p>
+          <p className="text-xs text-ink-tertiary">
+            Ma&apos;lumotlar hammaga umumiy ko&apos;rinishi uchun{' '}
+            <code className="text-ink-secondary">lib/firebase.ts</code> faylida o&apos;z Firebase
+            loyihangiz sozlamalarini kiriting (README.md dagi yo&apos;riqnomaga qarang).
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <span className="text-sm text-ink-tertiary">Yuklanmoqda...</span>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 text-center">
+        <p className="max-w-sm text-sm text-ink-tertiary">{error}</p>
       </main>
     );
   }

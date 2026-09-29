@@ -17,37 +17,18 @@ export interface AppData {
   contacts: Contact[];
 }
 
-const STORAGE_KEY = 'ayriliq-vaqti:data';
-
-// Static site, no backend/env available — admin gate is just this shared code.
+// Barcha tashrif buyuruvchilar buni ko'radi — Firestore xavfsizlik qoidalarida ham
+// yozish shu kodni talab qiladi (README.md dagi qoidalar namunasiga qarang).
 export const ADMIN_CODE = 'admin123';
 const ADMIN_SESSION_KEY = 'ayriliq-vaqti:admin';
 
-const defaultData: AppData = {
+export const defaultData: AppData = {
   countdown: null,
   contacts: []
 };
 
-export function loadData(): AppData {
-  if (typeof window === 'undefined') return defaultData;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultData;
-    const parsed = JSON.parse(raw);
-    return {
-      countdown: parsed.countdown ?? null,
-      contacts: Array.isArray(parsed.contacts) ? parsed.contacts : []
-    };
-  } catch {
-    return defaultData;
-  }
-}
-
-export function saveData(data: AppData) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
+// Bu faqat "admin kodi shu brauzerda tasdiqlandimi" degan vaqtinchalik UI holati —
+// umumiy ma'lumot emas, shuning uchun sessionStorage'da qolaveradi.
 export function isAdminAuthed(): boolean {
   if (typeof window === 'undefined') return false;
   return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
